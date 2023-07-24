@@ -3,7 +3,7 @@ library ensemble_camera;
 // manage Camera
 import 'package:ensemble/framework/action.dart';
 import 'package:ensemble/framework/bindings.dart';
-import 'package:ensemble/framework/placeholder/camera_manager.dart';
+import 'package:ensemble/framework/stub/camera_manager.dart';
 import 'package:ensemble/framework/scope.dart';
 import 'package:ensemble/screen_controller.dart';
 import 'package:flutter/material.dart';
