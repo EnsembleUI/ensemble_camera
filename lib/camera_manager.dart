@@ -27,6 +27,7 @@ const _optionMappings = {
   'focusIcon': 'focusIcon',
   'maxCountMessage': 'maxCountMessage',
   'autoCaptureInterval': 'autoCaptureInterval',
+  'enableMicrophone': 'enableMicrophone',
 };
 
 const _angleAssistOptions = {

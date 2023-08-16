@@ -105,6 +105,8 @@ class Camera extends StatefulWidget
       _controller.assistSpeedMessage = Utils.optionalString(value),
       'autoCaptureInterval': (value) =>
       _controller.autoCaptureInterval = Utils.getInt(value, fallback: -1),
+      'enableMicrophone': (value) => 
+      _controller.enableMicrophone = Utils.getBool(value, fallback: true),
     };
   }
 }
@@ -134,6 +136,7 @@ class MyCameraController extends WidgetController {
   IconModel? imagePickerIcon;
   IconModel? cameraRotateIcon;
   IconModel? focusIcon;
+  bool enableMicrophone = true;
 
   int autoCaptureInterval = -1;
   ValueNotifier<int> intervalCountdown = ValueNotifier(-1);
@@ -324,6 +327,7 @@ class CameraState extends WidgetState<Camera> with WidgetsBindingObserver {
     widget._controller.cameraController = CameraController(
       targetCamera,
       ResolutionPreset.veryHigh,
+      enableAudio: widget._controller.enableMicrophone,
     );
 
     try {
