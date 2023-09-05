@@ -49,34 +49,29 @@ class CameraManagerImpl extends CameraManager {
     try {
       final cameras = await availableCameras();
       if (cameras.isNotEmpty) {
-        CameraController(cameras[0], ResolutionPreset.max)
-            .initialize()
-            .then((value) {
-          status = true;
-        }).onError((error, stackTrace) {
-          if (error is CameraException) {
-            switch (error.code) {
-              // User denied the camera access request
-              case 'CameraAccessDenied':
-              // User has previously denied the camera access request
-              case 'CameraAccessDeniedWithoutPrompt':
-                status = false;
-                break;
-              case 'CameraAccessRestricted': // Parental Control
-              default:
-                status = null;
-                break;
-            }
-          } else {
-            status = null;
-          }
-        });
+        await CameraController(cameras[0], ResolutionPreset.max).initialize();
+        status = true;
       } else {
         status = null;
       }
       return status;
-    } catch (_) {
-      status = null;
+    } catch (error) {
+      if (error is CameraException) {
+        switch (error.code) {
+          // User denied the camera access request
+          case 'CameraAccessDenied':
+          // User has previously denied the camera access request
+          case 'CameraAccessDeniedWithoutPrompt':
+            status = false;
+            break;
+          case 'CameraAccessRestricted': // Parental Control
+          default:
+            status = null;
+            break;
+        }
+      } else {
+        status = null;
+      }
       return status;
     }
   }
