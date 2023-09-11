@@ -1,6 +1,7 @@
 library ensemble_camera;
 
 // manage Camera
+import 'package:camera/camera.dart';
 import 'package:ensemble/framework/action.dart';
 import 'package:ensemble/framework/bindings.dart';
 import 'package:ensemble/framework/stub/camera_manager.dart';
@@ -43,26 +44,59 @@ const _speedAssistOptions = {
 
 class CameraManagerImpl extends CameraManager {
   @override
+  Future<bool?> hasPermission() async {
+    bool? status;
+    try {
+      final cameras = await availableCameras();
+      if (cameras.isNotEmpty) {
+        await CameraController(cameras[0], ResolutionPreset.max).initialize();
+        status = true;
+      } else {
+        status = null;
+      }
+      return status;
+    } catch (error) {
+      if (error is CameraException) {
+        switch (error.code) {
+          // User denied the camera access request
+          case 'CameraAccessDenied':
+          // User has previously denied the camera access request
+          case 'CameraAccessDeniedWithoutPrompt':
+            status = false;
+            break;
+          case 'CameraAccessRestricted': // Parental Control
+          default:
+            status = null;
+            break;
+        }
+      } else {
+        status = null;
+      }
+      return status;
+    }
+  }
+
+  @override
   Future<void> openCamera(BuildContext context, ShowCameraAction cameraAction,
       ScopeManager? scopeManager) async {
     Camera camera = Camera(
       onCapture: cameraAction.onCapture == null
           ? null
           : () {
-        ScreenController()
-            .executeAction(context, cameraAction.onCapture!);
-      },
+              ScreenController()
+                  .executeAction(context, cameraAction.onCapture!);
+            },
       onComplete: cameraAction.onComplete == null
           ? null
           : () {
-        ScreenController()
-            .executeAction(context, cameraAction.onComplete!);
-      },
+              ScreenController()
+                  .executeAction(context, cameraAction.onComplete!);
+            },
     );
 
     if (cameraAction.id != null) {
       final previousAction =
-      scopeManager?.dataContext.getContextById(cameraAction.id!) as Camera?;
+          scopeManager?.dataContext.getContextById(cameraAction.id!) as Camera?;
       if (previousAction != null) camera = previousAction;
       scopeManager?.dataContext.addInvokableContext(cameraAction.id!, camera);
     }
