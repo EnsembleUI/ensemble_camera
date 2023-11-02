@@ -19,6 +19,7 @@ const _optionMappings = {
   'allowFlashControl': 'allowFlashControl',
   'preview': 'preview',
   'maxCount': 'maxCount',
+  'minCount': 'minCount',
   'permissionDeniedMessage': 'permissionDeniedMessage',
   'accessButtonLabel': 'accessButtonLabel',
   'galleryButtonLabel': 'galleryButtonLabel',
@@ -27,6 +28,7 @@ const _optionMappings = {
   'galleryPickerIcon': 'galleryPickerIcon',
   'focusIcon': 'focusIcon',
   'maxCountMessage': 'maxCountMessage',
+  'minCountMessage': 'minCountMessage',
   'autoCaptureInterval': 'autoCaptureInterval',
   'enableMicrophone': 'enableMicrophone',
 };

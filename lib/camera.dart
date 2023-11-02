@@ -57,7 +57,9 @@ class Camera extends StatefulWidget
 
   @override
   Map<String, Function> methods() {
-    return {};
+    return {
+      'clear': () => _controller.files.clear(),
+    };
   }
 
   @override
@@ -71,9 +73,12 @@ class Camera extends StatefulWidget
           _controller.allowCameraRotate = Utils.getBool(value, fallback: false),
       'allowFlashControl': (value) =>
           _controller.allowFlashControl = Utils.getBool(value, fallback: false),
+      'minCount': (value) => _controller.minCount = Utils.optionalInt(value),
       'maxCount': (value) => _controller.maxCount = Utils.optionalInt(value),
       'preview': (value) =>
           _controller.preview = Utils.getBool(value, fallback: false),
+      'minCountMessage': (value) =>
+          _controller.minCountMessage = Utils.optionalString(value),
       'maxCountMessage': (value) =>
           _controller.maxCountMessage = Utils.optionalString(value),
       'permissionDeniedMessage': (value) =>
@@ -119,8 +124,10 @@ class MyCameraController extends WidgetController {
   bool allowGallery = false;
   bool allowCameraRotate = false;
   bool allowFlashControl = false;
+  int? minCount = 2;
   int? maxCount;
   bool preview = false;
+  String? minCountMessage;
   String? maxCountMessage;
   String? permissionDeniedMessage;
   double minAngle = -180;
@@ -477,6 +484,25 @@ class CameraState extends WidgetState<Camera> with WidgetsBindingObserver {
                           showPreviewPage = true;
                         });
                       } else {
+                        if (widget._controller.minCount != null &&
+                            (widget._controller.files.length <
+                                widget._controller.minCount!)) {
+                          final errorMessage = widget
+                                  ._controller.minCountMessage ??
+                              Utils.translateWithFallback(
+                                  'ensemble.input.minCountMessage',
+                                  'Minimum ${widget._controller.minCount} capture are required');
+                          ToastController().showToast(
+                              context,
+                              ShowToastAction(
+                                  type: ToastType.error,
+                                  message: errorMessage,
+                                  alignment: Alignment.topCenter,
+                                  dismissible: true,
+                                  duration: 3),
+                              null);
+                          return;
+                        }
                         widget.onComplete?.call();
                         Navigator.pop(context, widget._controller.files);
                       }
@@ -641,6 +667,25 @@ class CameraState extends WidgetState<Camera> with WidgetsBindingObserver {
                   children: [
                     GestureDetector(
                       onTap: () {
+                        if (widget._controller.minCount != null &&
+                            (widget._controller.files.length <
+                                widget._controller.minCount!)) {
+                          final errorMessage = widget
+                                  ._controller.minCountMessage ??
+                              Utils.translateWithFallback(
+                                  'ensemble.input.minCountMessage',
+                                  'Minimum ${widget._controller.minCount} capture are required');
+                          ToastController().showToast(
+                              context,
+                              ShowToastAction(
+                                  type: ToastType.error,
+                                  message: errorMessage,
+                                  alignment: Alignment.topCenter,
+                                  dismissible: true,
+                                  duration: 3),
+                              null);
+                          return;
+                        }
                         widget.onComplete?.call();
                         Navigator.pop(context, widget._controller.files);
                       },
@@ -1135,7 +1180,7 @@ class CameraState extends WidgetState<Camera> with WidgetsBindingObserver {
         final errorMessage = widget._controller.maxCountMessage ??
             Utils.translateWithFallback('ensemble.input.maxCountMessage',
                 'Maximum ${widget._controller.maxCount} files can be selected');
-
+        if (!mounted) return;
         ToastController().showToast(
             context,
             ShowToastAction(
