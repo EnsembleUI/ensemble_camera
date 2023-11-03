@@ -124,7 +124,7 @@ class MyCameraController extends WidgetController {
   bool allowGallery = false;
   bool allowCameraRotate = false;
   bool allowFlashControl = false;
-  int? minCount = 2;
+  int? minCount;
   int? maxCount;
   bool preview = false;
   String? minCountMessage;
