@@ -65,6 +65,8 @@ class Camera extends StatefulWidget
   @override
   Map<String, Function> setters() {
     return {
+      'instantPreview': (value) =>
+          _controller.instantPreview = Utils.getBool(value, fallback: false),
       'mode': (value) => _controller.initCameraMode(value),
       'initialCamera': (value) => _controller.initCameraOption(value),
       'allowGalleryPicker': (value) =>
@@ -126,6 +128,7 @@ class MyCameraController extends WidgetController {
   bool allowFlashControl = false;
   int? minCount;
   int? maxCount;
+  bool instantPreview = false;
   bool preview = false;
   String? minCountMessage;
   String? maxCountMessage;
@@ -946,8 +949,17 @@ class CameraState extends WidgetState<Camera> with WidgetsBindingObserver {
     widget._controller.files.insert(0, file);
     widget._controller.currentFile = file;
     setState(() {});
-
     widget.onCapture?.call();
+
+    if (widget._controller.instantPreview) {
+      if (widget._controller.cameraController != null) {
+        widget._controller.cameraController!.pausePreview();
+      }
+      setState(() {
+        currentIndex = widget._controller.files.length;
+        showPreviewPage = true;
+      });
+    }
   }
 
   bool canCapture() {

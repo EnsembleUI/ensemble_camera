@@ -31,6 +31,7 @@ const _optionMappings = {
   'minCountMessage': 'minCountMessage',
   'autoCaptureInterval': 'autoCaptureInterval',
   'enableMicrophone': 'enableMicrophone',
+  'instantPreview': 'instantPreview'
 };
 
 const _angleAssistOptions = {
@@ -129,7 +130,8 @@ class CameraManagerImpl extends CameraManager {
       for (var option in cameraAction.options!.keys) {
         final property = _optionMappings[option];
         if (property != null) {
-          final value = scopeManager?.dataContext.eval(cameraAction.options![option]);
+          final value =
+              scopeManager?.dataContext.eval(cameraAction.options![option]);
           camera.setProperty(property, value);
         }
       }
