@@ -129,7 +129,8 @@ class CameraManagerImpl extends CameraManager {
       for (var option in cameraAction.options!.keys) {
         final property = _optionMappings[option];
         if (property != null) {
-          camera.setProperty(property, cameraAction.options![option]);
+          final value = scopeManager?.dataContext.eval(cameraAction.options![option]);
+          camera.setProperty(property, value);
         }
       }
     }
