@@ -735,10 +735,10 @@ class CameraState extends WidgetState<Camera> with WidgetsBindingObserver {
           const Spacer(),
           mediaThumbnail(),
           ElevatedButton(
+            onPressed: selectImage,
             child: Text(widget._controller.galleryButtonLabel ??
                 Utils.translateWithFallback(
                     'ensemble.input.galleryButtonLabel', 'Pick from gallery')),
-            onPressed: selectImage,
           ),
         ],
       ),
@@ -1170,7 +1170,6 @@ class CameraState extends WidgetState<Camera> with WidgetsBindingObserver {
       minWidth: 40,
       child: ElevatedButton(
         onPressed: onPressed,
-        child: icon,
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor ?? Colors.transparent,
           shadowColor: shadowColor ?? Colors.transparent,
@@ -1178,6 +1177,7 @@ class CameraState extends WidgetState<Camera> with WidgetsBindingObserver {
           side: BorderSide(color: bordercolor ?? Colors.white, width: 2.0),
           padding: const EdgeInsets.all(10),
         ),
+        child: icon,
       ),
     );
   }
