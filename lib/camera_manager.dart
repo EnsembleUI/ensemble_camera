@@ -97,7 +97,8 @@ class CameraManagerImpl extends CameraManager {
     final isDefault = Utils.getBool(
         scopeManager?.dataContext.eval(cameraAction.options?['default']),
         fallback: false);
-    if (isDefault) {
+
+    if (isDefault && !kIsWeb) {
       await defaultCamera(context, cameraAction, scopeManager);
     } else {
       await bespokeCamera(context, cameraAction, scopeManager);
