@@ -6,6 +6,7 @@ import 'package:ensemble/framework/ensemble_widget.dart';
 import 'package:ensemble/framework/event.dart';
 import 'package:ensemble/framework/extensions.dart';
 import 'package:ensemble/framework/scope.dart';
+import 'package:ensemble/framework/stub/qr_code_scanner.dart';
 import 'package:ensemble/screen_controller.dart';
 import 'package:ensemble/util/utils.dart';
 import 'package:ensemble/widget/helpers/controllers.dart';
@@ -13,21 +14,21 @@ import 'package:ensemble/widget/helpers/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
-class QRCodeScanner extends EnsembleWidget<QRCodeScannerController> {
-  static const type = 'QRCodeScanner';
+class EnsembleQRCodeScannerImpl
+    extends EnsembleWidget<EnsembleQRCodeScannerController>
+    implements EnsembleQRCodeScanner {
+  const EnsembleQRCodeScannerImpl._(super.controller, {super.key});
 
-  const QRCodeScanner._(super.controller, {super.key});
-
-  factory QRCodeScanner.build(dynamic controller) =>
-      QRCodeScanner._(controller is QRCodeScannerController
+  factory EnsembleQRCodeScannerImpl.build(dynamic controller) =>
+      EnsembleQRCodeScannerImpl._(controller is EnsembleQRCodeScannerController
           ? controller
-          : QRCodeScannerController());
+          : EnsembleQRCodeScannerController());
 
   @override
-  State<StatefulWidget> createState() => QRCodeScannerState();
+  State<StatefulWidget> createState() => EnsembleQRCodeScannerState();
 }
 
-class QRCodeScannerController extends EnsembleBoxController {
+class EnsembleQRCodeScannerController extends EnsembleBoxController {
   bool isFlashOn = false;
   bool hasFlash = false;
   bool hasBackCamera = false;
@@ -101,14 +102,15 @@ class QRCodeScannerController extends EnsembleBoxController {
     });
 }
 
-mixin QRCodeScannerAction on EnsembleWidgetState<QRCodeScanner> {
+mixin QRCodeScannerAction on EnsembleWidgetState<EnsembleQRCodeScannerImpl> {
   void flipCamera();
   void toggleFlash();
   void pauseCamera();
   void resumeCamera();
 }
 
-class QRCodeScannerState extends EnsembleWidgetState<QRCodeScanner>
+class EnsembleQRCodeScannerState
+    extends EnsembleWidgetState<EnsembleQRCodeScannerImpl>
     with QRCodeScannerAction {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   QRViewController? qrController;
@@ -132,7 +134,7 @@ class QRCodeScannerState extends EnsembleWidgetState<QRCodeScanner>
   }
 
   @override
-  void didUpdateWidget(covariant QRCodeScanner oldWidget) {
+  void didUpdateWidget(covariant EnsembleQRCodeScannerImpl oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     widget.controller.qrCodeScannerAction = this;
