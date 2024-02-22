@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:ensemble/framework/action.dart';
@@ -30,7 +29,9 @@ class QRCodeScanner extends EnsembleWidget<QRCodeScannerController> {
 
 class QRCodeScannerController extends EnsembleBoxController {
   bool isFlashOn = false;
-  SystemFeatures? _systemFeature;
+  bool hasFlash = false;
+  bool hasBackCamera = false;
+  bool hasFrontCamera = false;
   int? cutOutBorderRadius;
   int? cutOutBorderLength;
   int? cutOutBorderWidth;
@@ -58,9 +59,9 @@ class QRCodeScannerController extends EnsembleBoxController {
     return {
       'formatsAllowed': () => formatsAllowed,
       'mode': () => mode.name,
-      'hasBackCamera': () => _systemFeature?.hasBackCamera,
-      'hasFrontCamera': () => _systemFeature?.hasFrontCamera,
-      'hasFlash': () => _systemFeature?.hasFlash,
+      'hasBackCamera': () => hasBackCamera,
+      'hasFrontCamera': () => hasFrontCamera,
+      'hasFlash': () => hasFlash,
       'isFlashOn': () => isFlashOn,
     };
   }
@@ -173,6 +174,11 @@ class QRCodeScannerState extends EnsembleWidgetState<QRCodeScanner>
       qrController = controller;
     });
 
+    // Showing CameraException(404, null) without delay
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _getSystemFeatures();
+    });
+
     if (widget.controller.onInitialized != null) {
       ScreenController().executeAction(
         context,
@@ -182,9 +188,6 @@ class QRCodeScannerState extends EnsembleWidgetState<QRCodeScanner>
     }
 
     qrController?.scannedDataStream.listen((scanData) {
-      // print('Code Data: ${scanData.code}');
-      // print('Format Data: ${scanData.format}');
-      // print('ToString Data: ${scanData.toString()}');
       if (widget.controller.onReceived != null) {
         final data = {
           'format': scanData.format.name,
@@ -202,10 +205,9 @@ class QRCodeScannerState extends EnsembleWidgetState<QRCodeScanner>
   }
 
   void _onPermissionSet(BuildContext context, QRViewController ctrl, bool p) {
-    log('${DateTime.now().toIso8601String()}_onPermissionSet $p');
     if (!p) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('no Permission')),
+        const SnackBar(content: Text('No Permission')),
       );
     }
   }
@@ -215,30 +217,18 @@ class QRCodeScannerState extends EnsembleWidgetState<QRCodeScanner>
     qrController?.flipCamera();
   }
 
-  // TODO:
-  void getSystemFeatures() async {
-    final systemFeatures = await qrController?.getSystemFeatures();
-    if (systemFeatures != null) {
-      widget.controller._systemFeature = systemFeatures;
-
-      // widget.controller.mode = cameraInfo.name;
-      ScopeManager? scopeManager = ScreenController().getScopeManager(context);
-      if (scopeManager == null || widget.controller.id == null) return;
-      // scopeManager.dataContext.addDataContextById(
-      //     widget.controller.id!, SystemFeatureResponse(feature: systemFeatures));
-
-// final contactData = scopeManager.dataContext.getContextById(id);
-      // scopeManager.dispatch(ModelChangeEvent(
-      //     SimpleBindingSource(widget.controller.id!),
-      //     SystemFeatureResponse(feature: systemFeatures)));
-
-      scopeManager.dispatch(
-        ModelChangeEvent(
-          WidgetBindingSource(widget.controller.id!, property: 'hasBackCamera'),
-          systemFeatures,
-          bindingScope: scopeManager,
-        ),
-      );
+  Future<void> _getSystemFeatures() async {
+    try {
+      final systemFeatures = await qrController?.getSystemFeatures();
+      if (systemFeatures == null) return;
+      widget.controller.hasFlash = systemFeatures.hasFlash;
+      widget.controller.hasBackCamera = systemFeatures.hasBackCamera;
+      widget.controller.hasFrontCamera = systemFeatures.hasFrontCamera;
+      dispatchValue('hasFlash', widget.controller.hasFlash);
+      dispatchValue('hasBackCamera', widget.controller.hasBackCamera);
+      dispatchValue('hasFrontCamera', widget.controller.hasFrontCamera);
+    } catch (e) {
+      print('Failed to get system features: $e');
     }
   }
 
@@ -256,16 +246,16 @@ class QRCodeScannerState extends EnsembleWidgetState<QRCodeScanner>
   void toggleFlash() async {
     await qrController?.toggleFlash();
     widget.controller.isFlashOn = !widget.controller.isFlashOn;
+    dispatchValue('isFlashOn', widget.controller.isFlashOn);
+  }
 
-    // TODO:
+  void dispatchValue(String key, dynamic value) {
     ScopeManager? scopeManager = ScreenController().getScopeManager(context);
     if (scopeManager == null || widget.controller.id == null) return;
+
+    scopeManager.dataContext.addDataContextById(key, value);
+    final data = scopeManager.dataContext.getContextById(widget.controller.id!);
     scopeManager.dispatch(
-      ModelChangeEvent(
-        WidgetBindingSource(widget.controller.id!, property: 'isFlashOn'),
-        widget.controller.isFlashOn,
-        bindingScope: scopeManager,
-      ),
-    );
+        ModelChangeEvent(SimpleBindingSource(widget.controller.id!), data));
   }
 }
