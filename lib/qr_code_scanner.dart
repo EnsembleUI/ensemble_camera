@@ -1,11 +1,9 @@
 import 'dart:io';
 
 import 'package:ensemble/framework/action.dart';
-import 'package:ensemble/framework/bindings.dart';
 import 'package:ensemble/framework/ensemble_widget.dart';
 import 'package:ensemble/framework/event.dart';
 import 'package:ensemble/framework/extensions.dart';
-import 'package:ensemble/framework/scope.dart';
 import 'package:ensemble/framework/stub/qr_code_scanner.dart';
 import 'package:ensemble/screen_controller.dart';
 import 'package:ensemble/util/utils.dart';
@@ -30,9 +28,6 @@ class EnsembleQRCodeScannerImpl
 
 class EnsembleQRCodeScannerController extends EnsembleBoxController {
   bool isFlashOn = false;
-  bool hasFlash = false;
-  bool hasBackCamera = false;
-  bool hasFrontCamera = false;
   int? cutOutBorderRadius;
   int? cutOutBorderLength;
   int? cutOutBorderWidth;
@@ -43,6 +38,7 @@ class EnsembleQRCodeScannerController extends EnsembleBoxController {
   QRCodeScannerAction? qrCodeScannerAction;
   EnsembleAction? onReceived;
   EnsembleAction? onInitialized;
+  EnsembleAction? onPermissionSet;
   CameraFacing mode = CameraFacing.back;
   List<String> formatsAllowed = [];
   Color? overlayColor;
@@ -60,21 +56,19 @@ class EnsembleQRCodeScannerController extends EnsembleBoxController {
     return {
       'formatsAllowed': () => formatsAllowed,
       'mode': () => mode.name,
-      'hasBackCamera': () => hasBackCamera,
-      'hasFrontCamera': () => hasFrontCamera,
-      'hasFlash': () => hasFlash,
       'isFlashOn': () => isFlashOn,
     };
   }
 
   @override
-  Map<String, Function> methods() => Map<String, Function>.from(super.methods())
-    ..addAll({
+  Map<String, Function> methods() {
+    return {
       'flipCamera': () => qrCodeScannerAction?.flipCamera(),
       'toggleFlash': () => qrCodeScannerAction?.toggleFlash(),
       'pauseCamera': () => qrCodeScannerAction?.pauseCamera(),
       'resumeCamera': () => qrCodeScannerAction?.resumeCamera(),
-    });
+    };
+  }
 
   @override
   Map<String, Function> setters() => Map<String, Function>.from(super.setters())
@@ -99,6 +93,8 @@ class EnsembleQRCodeScannerController extends EnsembleBoxController {
           onInitialized = EnsembleAction.fromYaml(func, initiator: this),
       'onReceived': (func) =>
           onReceived = EnsembleAction.fromYaml(func, initiator: this),
+      'onPermissionSet': (func) =>
+          onPermissionSet = EnsembleAction.fromYaml(func, initiator: this),
     });
 }
 
@@ -176,11 +172,6 @@ class EnsembleQRCodeScannerState
       qrController = controller;
     });
 
-    // Showing CameraException(404, null) without delay
-    Future.delayed(const Duration(milliseconds: 500), () {
-      _getSystemFeatures();
-    });
-
     if (widget.controller.onInitialized != null) {
       ScreenController().executeAction(
         context,
@@ -206,10 +197,13 @@ class EnsembleQRCodeScannerState
     });
   }
 
-  void _onPermissionSet(BuildContext context, QRViewController ctrl, bool p) {
-    if (!p) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No Permission')),
+  void _onPermissionSet(
+      BuildContext context, QRViewController ctrl, bool status) {
+    if (widget.controller.onPermissionSet != null) {
+      ScreenController().executeAction(
+        context,
+        widget.controller.onPermissionSet!,
+        event: EnsembleEvent(widget.controller, data: {'status': status}),
       );
     }
   }
@@ -217,21 +211,6 @@ class EnsembleQRCodeScannerState
   @override
   void flipCamera() {
     qrController?.flipCamera();
-  }
-
-  Future<void> _getSystemFeatures() async {
-    try {
-      final systemFeatures = await qrController?.getSystemFeatures();
-      if (systemFeatures == null) return;
-      widget.controller.hasFlash = systemFeatures.hasFlash;
-      widget.controller.hasBackCamera = systemFeatures.hasBackCamera;
-      widget.controller.hasFrontCamera = systemFeatures.hasFrontCamera;
-      dispatchValue('hasFlash', widget.controller.hasFlash);
-      dispatchValue('hasBackCamera', widget.controller.hasBackCamera);
-      dispatchValue('hasFrontCamera', widget.controller.hasFrontCamera);
-    } catch (e) {
-      print('Failed to get system features: $e');
-    }
   }
 
   @override
@@ -248,16 +227,5 @@ class EnsembleQRCodeScannerState
   void toggleFlash() async {
     await qrController?.toggleFlash();
     widget.controller.isFlashOn = !widget.controller.isFlashOn;
-    dispatchValue('isFlashOn', widget.controller.isFlashOn);
-  }
-
-  void dispatchValue(String key, dynamic value) {
-    ScopeManager? scopeManager = ScreenController().getScopeManager(context);
-    if (scopeManager == null || widget.controller.id == null) return;
-
-    scopeManager.dataContext.addDataContextById(key, value);
-    final data = scopeManager.dataContext.getContextById(widget.controller.id!);
-    scopeManager.dispatch(
-        ModelChangeEvent(SimpleBindingSource(widget.controller.id!), data));
   }
 }
