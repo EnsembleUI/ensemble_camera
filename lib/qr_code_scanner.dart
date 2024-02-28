@@ -39,7 +39,7 @@ class EnsembleQRCodeScannerController extends EnsembleBoxController {
   EnsembleAction? onReceived;
   EnsembleAction? onInitialized;
   EnsembleAction? onPermissionSet;
-  CameraFacing mode = CameraFacing.back;
+  CameraFacing initialCamera = CameraFacing.back;
   List<String> formatsAllowed = [];
   Color? overlayColor;
 
@@ -55,7 +55,7 @@ class EnsembleQRCodeScannerController extends EnsembleBoxController {
   Map<String, Function> getters() {
     return {
       'formatsAllowed': () => formatsAllowed,
-      'mode': () => mode.name,
+      'initialCamera': () => initialCamera.name,
       'isFlashOn': () => isFlashOn,
     };
   }
@@ -73,7 +73,7 @@ class EnsembleQRCodeScannerController extends EnsembleBoxController {
   @override
   Map<String, Function> setters() => Map<String, Function>.from(super.setters())
     ..addAll({
-      'mode': (value) => mode =
+      'initialCamera': (value) => initialCamera =
           CameraFacing.values.from(Utils.optionalString(value)) ??
               CameraFacing.back,
       'formatsAllowed': (value) => formatsAllowed =
@@ -142,7 +142,7 @@ class EnsembleQRCodeScannerState
       boxController: widget.controller,
       widget: QRView(
         key: qrKey,
-        cameraFacing: widget.controller.mode,
+        cameraFacing: widget.controller.initialCamera,
         formatsAllowed: widget.controller.allFormatsAllowed,
         overlayMargin: widget.controller.overlayMargin ?? EdgeInsets.zero,
         overlay: QrScannerOverlayShape(
